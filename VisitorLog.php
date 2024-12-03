@@ -108,8 +108,9 @@ class VisitorLog {
 		else return false;
 	}
 	
-	public function pull() {
-		$visitors = ORM::for_table($this->database_table)->order_by_desc("id")->find_many();
+	public function pull($latest = null) {
+		if(isset($latest)) $visitors = ORM::for_table($this->database_table)->where_null("country")->find_many();
+		else $visitors = ORM::for_table($this->database_table)->order_by_desc("id")->find_many();
 		return $visitors;
 	}
 }

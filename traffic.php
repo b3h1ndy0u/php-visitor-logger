@@ -28,6 +28,7 @@ if(isset($_GET["countries"])) {
 		));
 		$select_log->save();
 	}
+	header('Location: ?token=' .$token. '&traffic-log');
 }
 
 <!-- Traffic Logger - Log all Inbound HTTP Traffic -->

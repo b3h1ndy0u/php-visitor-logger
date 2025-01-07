@@ -22,11 +22,13 @@ $unique_visits = !empty($unique_visits) ? count(array_values(array_unique($uniqu
 if(isset($_GET["countries"])) {
 	$select_unflagged = $VisitorLog->pull(true);
 	foreach($select_unflagged as $data) {
-		$select_log = ORM::for_table("visitors")->where(array("id" => $data["id"]))->find_one();
-		$select_log->set(array(
-			"country" => ip_to_country($data["ip"])
-		));
-		$select_log->save();
+		if($country = ip_to_country($data["ip"])) {
+			$select_log = ORM::for_table("visitors")->where(array("id" => $data["id"]))->find_one();
+			$select_log->set(array(
+				"country" => $country
+			));
+			$select_log->save();
+		}
 	}
 	header('Location: ?token=' .$token. '&traffic-log');
 }

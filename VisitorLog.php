@@ -28,7 +28,7 @@ class VisitorLog {
         }
     }
 
-    private function get_ip() {
+    public static function get_ip() {
         $client  = @$_SERVER['HTTP_CLIENT_IP'];
         $forward = @$_SERVER['HTTP_X_FORWARDED_FOR'];
         $remote  = $_SERVER['REMOTE_ADDR'];
@@ -54,41 +54,30 @@ class VisitorLog {
 	
 	public function start() {
 		
-		$browser = new VeryIdiot\BrowserDetection;
-		$device = new VeryIdiot\MobileDetect();
-		
-		if($device->isMobile())
-			$device_type = 'Mobile';
-		elseif($device->isTablet())
-			$device_type = ' Tablet';
-		else
-			$device_type = 'PC';
-			
-		if($device->isiOS())
-			$os = 'iOS';
-		elseif($device->isAndroidOS())
-			$os = 'Android';
-		elseif($device->isLinux())
-			$os = 'Linux';
-		else
-			$os = 'Windows';
+		$Browser = new B3hindYou\BrowserDetection();
 
-	if(isset($_SERVER['HTTP_REFERER']))
-		$ref = $_SERVER['HTTP_REFERER'];
-	else
-		$ref = '';
-		
-		$data = array(
-			"ip" => $this->get_ip(),
-			"location" => $this->get_location(),
-			"agent" => $_SERVER['HTTP_USER_AGENT'],
-			"browser" => $browser->getName(),
-			"os" => $os,
-			"device" => $device_type,
-			"ref" => $ref,
-			"time" => time()
-		);
-		
+		$detect_all = $Browser->getAll($this->get_user_agent(), 'JSON');
+		$detect_device = $Browser->getDevice($this->get_user_agent());
+		$detect_os = $Browser->getOS($this->get_user_agent());
+		$detect_browser = $Browser->getBrowser($this->get_user_agent());
+
+		if(isset($_SERVER['HTTP_REFERER']))
+			$ref = $_SERVER['HTTP_REFERER'];
+		else
+			$ref = '';
+			
+			$data = array(
+				"ip" => $this->get_ip(),
+				"location" => $this->get_location(),
+				"agent" => $_SERVER['HTTP_USER_AGENT'],
+				"browser" => $detect_browser['browser_title'],
+				"os" => $detect_os['os_title'],
+				"device" => $detect_device['device_type'],
+				"device_info_full" => $detect_all,
+				"ref" => $ref,
+				"time" => time()
+			);
+
 		$this->log_visitor($data);
 	}	
 	
@@ -102,6 +91,7 @@ class VisitorLog {
 			$visitor->browser = $data["browser"];
 			$visitor->os = $data["os"];
 			$visitor->device = $data["device"];
+			$visitor->device_info_full = $data["device_info_full"];
 			$visitor->ref = $data["ref"];
 			$visitor->save();
 		}

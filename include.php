@@ -2,7 +2,7 @@
 
 //require_once "system/idiorm.php";
 //require_once "config.php";
-//require_once "system/functions.php";
+require_once "system/functions.php";
 //require_once "system/api.php";
 
 //require_once "system/sage.phar";

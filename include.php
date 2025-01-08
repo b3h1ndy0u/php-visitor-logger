@@ -7,5 +7,5 @@
 
 //require_once "system/sage.phar";
 //require_once "system/Comments.php";
-require_once "VisitorLogInc.php";
-require_once "VisitorLog.php";
+require_once "system/VisitorLogInc.php";
+require_once "system/VisitorLog.php";

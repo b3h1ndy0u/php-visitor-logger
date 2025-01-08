@@ -1,19 +1,19 @@
 <?php
+/* Simple Administration Panel */
+/* -by b3hindYou */
+/*******************************************************************************************************************************/
+
 require_once "include.php";
 
-// Security token & some settings..
-$token = "6yva46";
-$pull_limit =  128;
+// Security token & other settings..
+$token = "6yva46"; // traffic.php?traffic-log&token=6yva46
+$pull_limit_table =  128; // limit the table rows shown by default..
 
 // Check if the security token is provided and correct..
 if(!isset($_GET["token"]) || $_GET["token"] != $token) die("Sorry but you very very idiot!");
 
-// $transfer_amount = 21066;
-// $transfer_wallet = 'bc1q4lkcsm6rrjnfk63tvvvepwgu00dfr0yfvxv2em';
-// bitcoin_send($transfer_wallet, $transfer_amount);
-
 // Ignore repeating IPs and google bots to get accurate unique visitors count..
-$unique_visits_sql = ORM::for_table('visitors')->where_not_like('agent', '%google.com%')->where_not_like('agent', '%GoogleOther%')->limit($pull_limit)->find_array();
+$unique_visits_sql = ORM::for_table('visitors')->find_array();
 foreach($unique_visits_sql as $data)
 	$unique_visits[] = $data["ip"];
 $unique_visits = !empty($unique_visits) ? count(array_values(array_unique($unique_visits))) : 0;
@@ -21,6 +21,7 @@ $unique_visits = !empty($unique_visits) ? count(array_values(array_unique($uniqu
 // Gather countries by IPs and populate the database..
 if(isset($_GET["countries"])) {
 	$select_unflagged = $VisitorLog->pull(true);
+
 	foreach($select_unflagged as $data) {
 		if($country = ip_to_country($data["ip"])) {
 			$select_log = ORM::for_table("visitors")->where(array("id" => $data["id"]))->find_one();
@@ -32,6 +33,9 @@ if(isset($_GET["countries"])) {
 	}
 	header('Location: ?token=' .$token. '&traffic-log');
 }
+?>
+
+<a href="?traffic-log&token=<?=$token?>&countries" style="float: right; margin-right: 15px;">[Gather Countries]</a>
 
 <!-- Traffic Logger - Log all Inbound HTTP Traffic -->
 <!-- Web Interface -->
@@ -57,27 +61,30 @@ Unique: <?=$unique_visits?><br />
 		</thead>
 	<tbody>
 	<?php if($visitors = $VisitorLog->pull()) { ?>
-	<?php if(!isset($_GET["show_all"])) $visitors = array_splice($visitors, 0, $pull_limit); ?>
+	<?php if(!isset($_GET["show_all"])) $visitors = array_splice($visitors, 0, $pull_limit_table); ?>
 	<?php foreach($visitors as $data) { ?>
-		<tr style="text-align: center; background: lime;">
+		<tr style="text-align: center;<?php if($select_ip = ORM::for_table("orders")->where(array("ip" => $data["ip"]))->find_one()){ ?> background: #244524;<? } ?>">
 			<td><?=$data["ip"];?> <b><small>(<?=$data["country"];?>)</small></b></td>
 			<td>
+			<?php if(ORM::for_table("orders")->where(array("ip" => $data["ip"]))->find_one()){ ?>
+				<a href="/order-invoice-<?=$select_ip["invoice_id"];?>"><small style="float: left;">(<?=$select_ip["firstname"];?> <?=$select_ip["lastname"];?>) [<?=$select_ip["email"];?>]</small></a>
+			<?php } ?>
 			<?php if(str_contains($data["location"], "invoice")) { ?><a href="<?=$data["location"];?>" target="_blank"><?=$data["location"];?></a><?php } else { ?>
-				<?=$data["location"];?>
+				<?=shortenString($data["location"], 42, "..");?>
 			<?php } ?>
 			</td>
 			<td><?=get_time_ago($data["time"])?></td>
 			<td><?=$data["device"];?></td>
 			<td><?=$data["browser"];?></td>
 			<td><?=$data["os"];?></td>
-			<td><?=$data["ref"];?></td>
-			<td style="font-size: 12px;"><?=$data["agent"];?></td>
+			<td><?=shortenString($data["ref"], 42, "..");?></td>
+			<td style="font-size: 12px; text-align: center;"><a href='#' onClick='alert(JSON.stringify(<?=$data["device_info_full"];?>))'>[i]</a> <?=$data["agent"];?></td>
 		</tr>
 	<?php }} ?>
 	</tbody>
 	</table>
 <?php } ?>
-  
+
 <!-- Pretty much unnecessary code, just to add some stylying for sake of the eyes -->
 <style>
 body {
@@ -87,4 +94,4 @@ body {
 	 font-family: "Futura", "Trebuchet MS", Arial, sans-serif;
 }
 a, a:visited { color: #57d96b; font-weight: bold;}
-</style>
+</style>	
